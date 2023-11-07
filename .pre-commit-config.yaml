@@ -28,4 +28,4 @@ repos:
 #    rev: 22.1.0  
 #    hooks:
 #      - id: black
-#        language_version: 3.11 # Specify the Python version
+#        language_version: 3.11 # Specify the Python versi
