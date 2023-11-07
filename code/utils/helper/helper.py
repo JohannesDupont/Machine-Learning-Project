@@ -63,7 +63,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         data_time.update(time.time() - end)
 
         if args.gpu is not None:
-            input = input.cuda(args.gpu, non_blocking=True)
+            print('must set cuda config') #input = input.cuda(args.gpu, non_blocking=True)
         #target = target.cuda(args.gpu, non_blocking=True)
         target = target.cpu()
         
