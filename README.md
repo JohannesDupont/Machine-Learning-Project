@@ -10,6 +10,10 @@ The idea is the following:
 2. Model wrapping in webserver and deployment in seperate container
 3. CI/CD Pipeline for Heroku Deployment
 
+### Quickstart
+- executing `bash start_jupyter.sh` starts jupyter server and mlflow
+- executing `bash start_modelserver.sh` starts the model in a webserver 
+
 ### code/
 At the heart of our project lies the `code/` directory, which contains Jupyter notebooks and scripts essential for training our sophisticated machine learning models, ECA-Net and SE.
 
@@ -38,7 +42,7 @@ Saved in a sqlite db file in `` mlflow/db ``.
 
 
 ### deployment/
-Contains the saved models and a small webserver which is used for the model deployment. 
+Contains the saved models and a small webserver which is used for the model deployment in app.py.
 Webserver can be started using `` docker-compose build && docker-compose up `` inside the deployment folder.
 The webserver is reachable under  ``http://0.0.0.0:5555``.
 

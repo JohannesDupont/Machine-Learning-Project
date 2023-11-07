@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y gcc python3-dev
 
 COPY code /app
 
+COPY deployment/ /app/
+
 COPY ./deployment/utils/requirements.txt /app
 
 RUN pip install --no-cache-dir -r requirements.txt
