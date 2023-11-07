@@ -1,11 +1,9 @@
 FROM python:3.10
 
-# Install mlflow via pip
 RUN pip install mlflow
 
 WORKDIR /work/mlflow
 
-# Update the package list, install sqlite3, and clear the cache in one RUN command to reduce image size
 RUN apt-get update && \
     apt-get install -y sqlite3 && \
     rm -rf /var/lib/apt/lists/*
@@ -21,5 +19,5 @@ CMD ["mlflow", "server", \
      "--backend-store-uri", "sqlite:///db/mlflow.db", \
      "--default-artifact-root", "artifacts", \
      "--host", "0.0.0.0"]
-# Expose the port MLflow will use
+
 EXPOSE 5000
