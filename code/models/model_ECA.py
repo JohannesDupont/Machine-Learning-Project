@@ -118,23 +118,32 @@ class ECABottleneck(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
 
-    def __init__(self, block, layers, k_size=[3, 3, 3, 3]):
+'''
+Attention - this is a resnet for the resized images for original size, uncomment ResNet below
+
+'''
+class ResNet(nn.Module):
+    def __init__(self, block, layers, k_size=[3, 3, 3, 3], num_classes=1000):
         self.inplanes = 64
         super(ResNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        # Adjust the kernel size and stride for the smaller input size if necessary
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0], int(k_size[0]))
         self.layer2 = self._make_layer(block, 128, layers[1], int(k_size[1]), stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], int(k_size[2]), stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], int(k_size[3]), stride=2)
         
         self.conv_final = nn.Conv2d(512 * block.expansion, 1, kernel_size=1)
-        self.upsample = nn.Upsample(size=(520, 704), mode='bilinear', align_corners=True)
-        #self.fc = nn.Linear(512 * block.expansion, num_classes)
+        # Update the upsample size to the new input size
+        self.upsample = nn.Upsample(size=(64, 64), mode='bilinear', align_corners=True)
+
+        # Adaptive pooling can be added here if required
+        # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        # self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -143,6 +152,7 @@ class ResNet(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
+
 
     def _make_layer(self, block, planes, blocks, k_size, stride=1):
         downsample = None
@@ -177,7 +187,6 @@ class ResNet(nn.Module):
 
         return x
 
-
     
     
 def eca_resnet50(k_size=[3, 3, 3, 3], pretrained=False):
@@ -192,3 +201,34 @@ def eca_resnet50(k_size=[3, 3, 3, 3], pretrained=False):
     model = ResNet(ECABottleneck, [3, 4, 6, 3], k_size=k_size)
     model.avgpool = nn.AdaptiveAvgPool2d(1)
     return model
+
+
+"""ResNet for original image size 520, 704
+
+class ResNet(nn.Module):
+
+    def __init__(self, block, layers, k_size=[3, 3, 3, 3]):
+        self.inplanes = 64
+        super(ResNet, self).__init__()
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.layer1 = self._make_layer(block, 64, layers[0], int(k_size[0]))
+        self.layer2 = self._make_layer(block, 128, layers[1], int(k_size[1]), stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], int(k_size[2]), stride=2)
+        self.layer4 = self._make_layer(block, 512, layers[3], int(k_size[3]), stride=2)
+        
+        self.conv_final = nn.Conv2d(512 * block.expansion, 1, kernel_size=1)
+        self.upsample = nn.Upsample(size=(520, 704), mode='bilinear', align_corners=True)
+        #self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+"""
