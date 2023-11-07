@@ -1,0 +1,11 @@
+pandas
+torch
+torchvision
+numpy
+scikit-learn
+matplotlib
+seaborn
+mlflow
+matplotlib
+tifffile
+flasgger

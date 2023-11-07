@@ -1,0 +1,31 @@
+version: '3.8'
+
+networks:
+  shared_network:
+    external: true
+
+services:
+  jupyter:
+    container_name: jupyter-lab
+    build:
+      context: .
+      dockerfile: Dockerfile.Jupyter
+    ports:
+      - "8080:8888"
+    volumes:
+      - ./../:/work/
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - GRANT_SUDO=yes
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.password='' "--notebook-dir=/work"
+
+  mlflow-server:
+    container_name: mlflow
+    build:
+      context: . 
+      dockerfile: Dockerfile.MLflow
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./../mlflow:/work/mlflow
+

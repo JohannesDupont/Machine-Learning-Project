@@ -1,0 +1,17 @@
+version: '3.8'
+
+networks:
+  mlflow-network:
+    external: true
+
+services:
+  web:
+    container_name: webservice
+    build: 
+      context: ../
+      dockerfile: Dockerfile.DeploymentModel
+    volumes:
+      - ../code:/app/code
+      #- ./code/trained_models:/app/trained_models
+    ports:
+      - "5555:5555"

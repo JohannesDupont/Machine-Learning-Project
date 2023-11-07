@@ -1,0 +1,7 @@
+.DS_Store
+.Trash-0
+*/.DS_Store
+*.ipynb_checkpoints
+data/train/*
+data/test/*
+*.png
