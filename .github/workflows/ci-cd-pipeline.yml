@@ -3,7 +3,7 @@ name: doctor_derama CI/CD
 on: [push, pull_request]
 
 jobs:
-  test:
+  build: 
     runs-on: ubuntu-latest
 
     strategy:
@@ -29,8 +29,8 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-deploy:
-    needs: build
+  deploy: 
+    needs: build 
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
