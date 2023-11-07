@@ -1,0 +1,15 @@
+artifact_uri: file:///work/code/mlruns/665374166021559104/7eab717a2d6d4f86a7adf0e2ecc6e5fa/artifacts
+end_time: 1699338403193
+entry_point_name: ''
+experiment_id: '665374166021559104'
+lifecycle_stage: active
+run_id: 7eab717a2d6d4f86a7adf0e2ecc6e5fa
+run_name: Efficient Channel Attention
+run_uuid: 7eab717a2d6d4f86a7adf0e2ecc6e5fa
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1699338402646
+status: 3
+tags: []
+user_id: root

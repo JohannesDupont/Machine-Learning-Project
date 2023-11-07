@@ -2,6 +2,7 @@
 .Trash-0
 */.DS_Store
 *.ipynb_checkpoints
-data/train/*
-data/test/*
+data/train/*.tif
+data/test/*.tif	
 *.png
+*.tif
