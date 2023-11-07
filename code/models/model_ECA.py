@@ -18,6 +18,7 @@ import torchvision.datasets as datasets
 import json
 import math
 
+
 class eca_layer(nn.Module):
     """Constructs a ECA module.
 
@@ -25,10 +26,13 @@ class eca_layer(nn.Module):
         channel: Number of channels of the input feature map
         k_size: Adaptive selection of kernel size
     """
+
     def __init__(self, channel, k_size=3):
         super(eca_layer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.conv = nn.Conv1d(1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False) 
+        self.conv = nn.Conv1d(
+            1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False
+        )
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
@@ -42,8 +46,8 @@ class eca_layer(nn.Module):
         y = self.sigmoid(y)
 
         return x * y.expand_as(x)
-    
-    
+
+
 class ECABasicBlock(nn.Module):
     expansion = 1
 
@@ -57,6 +61,17 @@ class ECABasicBlock(nn.Module):
         self.eca = eca_layer(planes, k_size)
         self.downsample = downsample
         self.stride = stride
+
+    def conv3x3(in_planes, out_planes, stride=1, padding=1):
+        """3x3 convolution with padding"""
+        return nn.Conv2d(
+            in_planes,
+            out_planes,
+            kernel_size=3,
+            stride=stride,
+            padding=padding,
+            bias=False,
+        )
 
     def forward(self, x):
         residual = x
@@ -84,8 +99,9 @@ class ECABottleneck(nn.Module):
         super(ECABottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
+        self.conv2 = nn.Conv2d(
+            planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+        )
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * 4)
@@ -118,11 +134,12 @@ class ECABottleneck(nn.Module):
         return out
 
 
-
-'''
+"""
 Attention - this is a resnet for the resized images for original size, uncomment ResNet below
 
-'''
+"""
+
+
 class ResNet(nn.Module):
     def __init__(self, block, layers, k_size=[3, 3, 3, 3], num_classes=1000):
         self.inplanes = 64
@@ -136,10 +153,10 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], int(k_size[1]), stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], int(k_size[2]), stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], int(k_size[3]), stride=2)
-        
+
         self.conv_final = nn.Conv2d(512 * block.expansion, 1, kernel_size=1)
         # Update the upsample size to the new input size
-        self.upsample = nn.Upsample(size=(64, 64), mode='bilinear', align_corners=True)
+        self.upsample = nn.Upsample(size=(64, 64), mode="bilinear", align_corners=True)
 
         # Adaptive pooling can be added here if required
         # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -148,18 +165,22 @@ class ResNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-
 
     def _make_layer(self, block, planes, blocks, k_size, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion,
-                          kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
                 nn.BatchNorm2d(planes * block.expansion),
             )
 
@@ -183,12 +204,11 @@ class ResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.conv_final(x)
-        x = self.upsample(x)  
+        x = self.upsample(x)
 
         return x
 
-    
-    
+
 def eca_resnet50(k_size=[3, 3, 3, 3], pretrained=False):
     """Constructs a ResNet-50 model.
 

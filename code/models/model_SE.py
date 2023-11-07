@@ -20,7 +20,6 @@ import math
 
 
 class ResNet(nn.Module):
-
     def __init__(self, block, layers, k_size=[3, 3, 3, 3]):
         self.inplanes = 64
         super(ResNet, self).__init__()
@@ -33,23 +32,29 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer_SE(SEBottleneck, 256, layers[2], stride=2)
         self.layer4 = self._make_layer_SE(SEBottleneck, 512, layers[3], stride=2)
         self.conv_final = nn.Conv2d(512 * block.expansion, 1, kernel_size=1)
-        self.upsample = nn.Upsample(size=(520, 704), mode='bilinear', align_corners=True)
+        self.upsample = nn.Upsample(
+            size=(520, 704), mode="bilinear", align_corners=True
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-                
-    
+
     def _make_layer_SE(self, block, planes, blocks, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion,
-                          kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
                 nn.BatchNorm2d(planes * block.expansion),
             )
 
@@ -60,8 +65,6 @@ class ResNet(nn.Module):
             layers.append(block(self.inplanes, planes))  # k_size removed here
 
         return nn.Sequential(*layers)
-
-
 
     def forward(self, x):
         x = self.conv1(x)
@@ -75,12 +78,11 @@ class ResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.conv_final(x)
-        x = self.upsample(x)  
+        x = self.upsample(x)
 
         return x
-    
-    
-    
+
+
 class SEBlock(nn.Module):
     def __init__(self, channel, reduction=16):
         super(SEBlock, self).__init__()
@@ -89,7 +91,7 @@ class SEBlock(nn.Module):
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
             nn.Linear(channel // reduction, channel, bias=False),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):
@@ -98,6 +100,7 @@ class SEBlock(nn.Module):
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
 
+
 class SEBottleneck(nn.Module):
     expansion = 4
 
@@ -105,10 +108,13 @@ class SEBottleneck(nn.Module):
         super(SEBottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
+        self.conv2 = nn.Conv2d(
+            planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+        )
         self.bn2 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1, bias=False)
+        self.conv3 = nn.Conv2d(
+            planes, planes * self.expansion, kernel_size=1, bias=False
+        )
         self.bn3 = nn.BatchNorm2d(planes * self.expansion)
         self.relu = nn.ReLU(inplace=True)
         self.se = SEBlock(planes * self.expansion, reduction)
@@ -137,9 +143,8 @@ class SEBottleneck(nn.Module):
         out = self.relu(out)
 
         return out
-    
-    
-    
+
+
 def SE_resnet50(pretrained=False):
     """Constructs a ResNet-50 model.
     Args:
