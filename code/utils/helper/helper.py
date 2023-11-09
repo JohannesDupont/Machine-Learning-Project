@@ -188,3 +188,84 @@ def data_save(root, file):
         if line > epoch:
             file_temp.write(str(line) + " " + str(file[line]) + "\n")
     file_temp.close()
+
+
+
+
+class CustomDatasetCOCO(torch.utils.data.Dataset):
+    def __init__(self, annotation_path, root, transforms=None):
+        self.root = root
+        self.transforms = transforms
+        with open(annotation_path) as f:
+            self.annotations = json.load(f)
+        self.imgs = {image['id']: image for image in self.annotations['images']}
+        self.image_ids = [image['id'] for image in self.annotations['images']]
+
+    def __getitem__(self, idx):
+        
+        img_id = self.image_ids[idx]
+        img_info = self.imgs[img_id]
+        img_path = os.path.join(self.root, img_info['file_name'])
+        img = Image.open(img_path).convert("RGB")
+        annotations = [anno for anno in self.annotations['annotations'] if anno['image_id'] == img_id]
+        
+
+        boxes = [anno['bbox'] for anno in annotations]  # This line requires annotations to be defined
+        labels = [anno['category_id'] for anno in annotations]  # Same here
+
+        boxes = [[x, y, x + width, y + height] for x, y, width, height in boxes]
+        boxes = torch.as_tensor([[x, y, x + w, y + h] for x, y, w, h in boxes], dtype=torch.float32)
+        labels = torch.as_tensor([anno['category_id'] for anno in annotations], dtype=torch.int64)
+        
+        target = {}
+        target['boxes'] = boxes
+        target['labels'] = labels
+        target['image_id'] = torch.tensor([img_id])
+
+        if self.transforms is not None:
+            image, target = self.transforms(img, target)
+
+        return image, target
+
+    def __len__(self):
+        return len(self.image_ids)
+
+    
+class MyToTensor(object):
+    def __call__(self, image, target):
+        image = T.ToTensor()(image)
+        return image, target
+    
+class Compose(object):
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, image, target):
+        for t in self.transforms:
+            image, target = t(image, target)
+        return image, target
+
+def get_transform(train):
+    transforms = [MyToTensor()]
+    return Compose(transforms)
+
+def collate_fn(batch):
+    images, targets = list(zip(*batch))
+    images = torch.stack(images, 0)
+    
+    new_targets = []
+    for target in targets:
+        new_dict = {}
+        for k, v in target.items():
+            if k == 'boxes':
+                
+                if isinstance(v, (list, np.ndarray)):
+                    v = torch.as_tensor(v)
+                new_dict[k] = v 
+            else:
+                if not isinstance(v, torch.Tensor):
+                    v = torch.tensor(v)
+                new_dict[k] = v
+        new_targets.append(new_dict)
+    
+    return images, new_targets
